@@ -1,10 +1,48 @@
 from flask_restful import Resource, reqparse
 from models.hotel import HotelModel
+from resources.filtros import normalize_path_params, consulta_sem_cidade, consulta_com_cidade
 from flask_jwt_extended import jwt_required
+import sqlite3
+
+path_params = reqparse.RequestParser()
+path_params.add_argument('cidade', type=str)
+path_params.add_argument('estrelas_min', type=float)
+path_params.add_argument('estrelas_max', type=float)
+path_params.add_argument('diaria_min', type=float)
+path_params.add_argument('estrelas_min', type=float)
+path_params.add_argument('estrelas_min', type=float)
+path_params.add_argument('estrelas_min', type=float)
+path_params.add_argument('estrelas_min', type=float)
+path_params.add_argument('estrelas_min', type=float)
 
 class Hoteis(Resource):
     def get(self):
-        # return hoteis ou return {'hoteis': hoteis}
+        connection  = sqlite3.connect('banco.db')
+        cursor = connection.cursor()
+
+        dados = path_params.parse_args()
+        dados_validos = {chave: dados[chave] for chave in dados if dados[chave] is not None}
+        parametros = normalize_path_params(**dados_validos)
+        
+        if not parametros.get('cidade'): 
+            tupla = tuple([parametros[chave] for chave in parametros])
+            resultado = cursor.execute(consulta_sem_cidade, tupla)
+        else:
+            tupla = tuple([parametros[chave] for chave in parametros])
+            resultado = cursor.execute(consulta_com_cidade, tupla)   
+
+        hoteis = []     
+        for linha in resultado:
+            hoteis.append({
+                'hotel_id': linha[0],
+                'nome': linha[1],
+                'estrelas': linha[2],
+                'diaria': linha[3],
+                'cidade': linha[4]
+            })
+        
+        return {'hoteis': hoteis} # SELECT * FROM hoteis
+           
         return {'hoteis': [hotel.json() for hotel in HotelModel.query.all()]}
 
 class Hotel(Resource):
