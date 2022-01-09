@@ -4,6 +4,7 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt
 from werkzeug.security import safe_str_cmp
 from blacklist import BLACKLIST 
 import traceback
+from flask import make_response, render_template
 
 atributos = reqparse.RequestParser()
 atributos.add_argument('login', type=str, required=True, help="The field 'login' cannot be left blank.")
@@ -86,4 +87,6 @@ class UserConfirm(Resource):
     
         user.ativado = True
         user.save_user()
-        return {"message": "User id '{}' confirmed sucesfully.".format(user_id)}
+        # return {"message": "User id '{}' confirmed sucesfully.".format(user_id)}
+        headers = {'Content-Type': 'text/html'}
+        return make_response(render_template('user_confirm.html', email=user.email, usuario=user.login), 200, headers)
